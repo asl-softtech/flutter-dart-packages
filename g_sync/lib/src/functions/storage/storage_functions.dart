@@ -13,7 +13,7 @@ import '../objects/objects.dart';
 class StorageFunctions {
   const StorageFunctions._();
 
-  Future<void> clearAllTable() async {
+  static Future<void> clearAllTable() async {
     try {
       await Future.wait([
         Tables.downloadTable.clear(),
@@ -24,7 +24,7 @@ class StorageFunctions {
     }
   }
 
-  Future<void> deleteARowFromTable(GSTable table, int rowIndex) async {
+  static Future<void> deleteARowFromTable(GSTable table, int rowIndex) async {
     try {
       if (table.tableType == GSTableTypes.downloadTable) {
         final tableInstance = Tables.downloadTable.get(table.id);
@@ -60,14 +60,14 @@ class StorageFunctions {
     }
   }
 
-  Future<void> download(List<GSDownloadParams> tableWiseParams) async {
+  static Future<void> download(List<GSDownloadParams> tableWiseParams) async {
     try {
-      final startTime = DateTime.now();
-
       final initialized = Tables.downloadTable.isOpen;
       if (!initialized) {
         throw NotInitialized(message: "DownloadTables are not initialized");
       }
+
+      final startTime = DateTime.now();
 
       Logger.plain("Download Started at: ${startTime.toTimeString12}");
 
@@ -125,7 +125,9 @@ class StorageFunctions {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getDataFormTable(GSTable table) async {
+  static Future<List<Map<String, dynamic>>> getDataFormTable(
+    GSTable table,
+  ) async {
     try {
       final storageTable = table.tableType == GSTableTypes.downloadTable
           ? Tables.downloadTable.get(table.id)
@@ -157,7 +159,7 @@ class StorageFunctions {
     }
   }
 
-  Future<List<GSData>> getDownloadTables() async {
+  static Future<List<GSData>> getDownloadTables() async {
     try {
       final table = Tables.downloadTable;
 
@@ -177,7 +179,7 @@ class StorageFunctions {
     }
   }
 
-  Future<List<GSData>> getUploadTables() async {
+  static Future<List<GSData>> getUploadTables() async {
     try {
       final table = Tables.uploadTable;
 
@@ -197,7 +199,9 @@ class StorageFunctions {
     }
   }
 
-  Future<List<GSUploadTable>> getNotUploadedData(List<GSTable> tables) async {
+  static Future<List<GSUploadTable>> getNotUploadedData(
+    List<GSTable> tables,
+  ) async {
     try {
       final notUploadedTables = <GSUploadTable>[];
 
@@ -227,11 +231,11 @@ class StorageFunctions {
     }
   }
 
-  Future<void> saveToTable(
-      GSTable table,
-      Map<String, dynamic> data, [
-        Map<String, String>? files,
-      ]) async {
+  static Future<void> saveToTable(
+    GSTable table,
+    Map<String, dynamic> data, [
+    Map<String, String>? files,
+  ]) async {
     final isDownload = table.tableType == GSTableTypes.downloadTable;
     final isUpload = table.tableType == GSTableTypes.uploadTable;
 
@@ -245,14 +249,16 @@ class StorageFunctions {
     GSBaseTable tableInstance;
 
     if (isDownload) {
-      tableInstance = Tables.downloadTable.get(table.id) ??
+      tableInstance =
+          Tables.downloadTable.get(table.id) ??
           GSDownloadTable(
             tableKey: table.id,
             tableName: table.tableName,
             lastUpdateTime: DateTime.now(),
           );
     } else {
-      tableInstance = Tables.uploadTable.get(table.id) ??
+      tableInstance =
+          Tables.uploadTable.get(table.id) ??
           GSUploadTable(
             tableKey: table.id,
             tableName: table.tableName,
@@ -260,7 +266,9 @@ class StorageFunctions {
           );
     }
 
-    final nextIndex = tableInstance.rows.isEmpty ? 1 : tableInstance.rows.last.index + 1;
+    final nextIndex = tableInstance.rows.isEmpty
+        ? 1
+        : tableInstance.rows.last.index + 1;
     final newRow = tableInstance.createRowData(nextIndex, data, files);
 
     tableInstance = tableInstance.copyWith(
@@ -270,5 +278,70 @@ class StorageFunctions {
 
     await tableInstance.saveTable();
     Logger.plain("Data saved to ${table.tableName} at row: $nextIndex");
+  }
+
+  static Future<void> upload(List<GSUploadParams> unuploadedRows) async {
+    try {
+      final initialized = Tables.uploadTable.isOpen;
+      if (!initialized) {
+        throw NotInitialized(message: "UploadTables are not initialized");
+      }
+
+      final startTime = DateTime.now();
+      Logger.plain("Upload Started at: ${startTime.toTimeString12}");
+
+      for (final row in unuploadedRows) {
+        final table = Tables.uploadTable.get(row.table.id);
+
+        if (table == null) {
+          Logger.error("Table not found: ${row.table.tableName}");
+          continue;
+        }
+
+        final response = await GSNetwork.request(
+          row.table.urlToHeat,
+          row.table.methode.methode,
+          headers: row.headerData,
+          query: row.queryParamsData,
+          body: row.notUploadedRow.data,
+          files: row.notUploadedRow.files,
+        );
+
+        final networkResponse = GSNetworkResponse.fromJson(response);
+
+        late GSUploadData updatedRow;
+        if (networkResponse.success) {
+          updatedRow = row.notUploadedRow.copyWith(
+            uploaded: true,
+            uploadTryTime: DateTime.now(),
+          );
+        } else {
+          updatedRow = row.notUploadedRow.copyWith(
+            uploadError: networkResponse.errorMessage,
+            uploadTryTime: DateTime.now(),
+          );
+        }
+
+        final updatedRows = [
+          for (final tableRows in table.rows)
+            if (tableRows.index == row.notUploadedRow.index)
+              updatedRow
+            else
+              tableRows,
+        ];
+
+        final updatedTable = table.copyWith(rows: updatedRows);
+
+        await updatedTable.saveTable();
+      }
+
+      final endTime = DateTime.now();
+      final timeTaken = endTime.difference(startTime);
+
+      Logger.plain("Upload Data Completed At: ${endTime.toTimeString12}");
+      Logger.plain("Took $timeTaken to complete Data Upload");
+    } catch (_) {
+      rethrow;
+    }
   }
 }

@@ -18,4 +18,6 @@ export 'models/table/table.dart';
 
 export 'models/upload/upload_data.dart';
 
+export 'models/upload/upload_params.dart';
+
 export 'models/upload/upload_table.dart';

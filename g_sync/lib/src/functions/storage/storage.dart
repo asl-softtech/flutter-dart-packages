@@ -11,7 +11,7 @@ import '../objects/objects.dart';
 class Storage {
   const Storage._();
 
-  Future<void> createInstance(String packageName) async {
+  static Future<void> createInstance(String packageName) async {
     try {
       final appDir = await _createDirectory(packageName);
       await _createStorage(appDir);
@@ -20,7 +20,7 @@ class Storage {
     }
   }
 
-  Future<GSAppDir?> _createDirectory(String packageName) async {
+  static Future<GSAppDir?> _createDirectory(String packageName) async {
     if (kIsWeb) return null;
 
     try {
@@ -36,7 +36,7 @@ class Storage {
     }
   }
 
-  Future<void> _createStorage(GSAppDir? appDir) async {
+  static Future<void> _createStorage(GSAppDir? appDir) async {
     try {
       await Hive.initFlutter(kIsWeb ? null : appDir?.db.path);
       await _registerTableAdapters();
@@ -47,7 +47,7 @@ class Storage {
     }
   }
 
-  Future<void> _registerTableAdapters() async {
+  static Future<void> _registerTableAdapters() async {
     void safeRegister<T>(TypeAdapter<T> adapter) {
       if (!Hive.isAdapterRegistered(adapter.typeId)) {
         Hive.registerAdapter(adapter);
@@ -60,7 +60,7 @@ class Storage {
     safeRegister(GSUploadTableAdapter());
   }
 
-  Future<void> _openTables() async {
+  static Future<void> _openTables() async {
     await Hive.openBox<GSDownloadData>(CategoryName.downloadData);
     await Hive.openBox<GSDownloadTable>(CategoryName.downloadTable);
     await Hive.openBox<GSUploadData>(CategoryName.uploadData);
