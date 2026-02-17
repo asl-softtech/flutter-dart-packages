@@ -278,10 +278,19 @@ class StorageFunctions {
         : tableInstance.rows.last.index + 1;
     final newRow = tableInstance.createRowData(nextIndex, data, files);
 
-    tableInstance = tableInstance.copyWith(
-      rows: [...tableInstance.rows, newRow],
-      lastUpdateTime: DateTime.now(),
-    );
+    if (isDownload) {
+      final downloadTable = tableInstance as GSDownloadTable;
+      tableInstance = downloadTable.copyWith(
+        rows: [...downloadTable.rows, newRow as GSDownloadData],
+        lastUpdateTime: DateTime.now(),
+      );
+    } else {
+      final uploadTable = tableInstance as GSUploadTable;
+      tableInstance = uploadTable.copyWith(
+        rows: [...uploadTable.rows, newRow as GSUploadData],
+        lastUpdateTime: DateTime.now(),
+      );
+    }
 
     await tableInstance.saveTable();
     Logger.plain("Data saved to ${table.tableName} at row: $nextIndex");
