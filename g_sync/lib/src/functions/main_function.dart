@@ -27,4 +27,38 @@ class GomuGomuSync {
   }) async {
     return await StorageFunctions.download(tableWiseParams);
   }
+
+  static Future<List<Map<String, dynamic>>> getDataFormTable({
+    required GSTable table,
+  }) async {
+    return await StorageFunctions.getDataFormTable(table);
+  }
+
+  static Future<List<GSData>> getDownloadTables() async {
+    return await StorageFunctions.getDownloadTables();
+  }
+
+  static Future<List<GSData>> getUploadTables() async {
+    return await StorageFunctions.getUploadTables();
+  }
+
+  static Future<List<GSUploadTable>> getNotUploadedData({
+    required List<GSTable> tables,
+  }) async {
+    return await StorageFunctions.getNotUploadedData(tables);
+  }
+
+  static Future<void> saveToTable({
+    required GSTable table,
+    required Map<String, dynamic> data,
+    Map<String, String>? files,
+  }) async {
+    return await StorageFunctions.saveToTable(table, data, files);
+  }
+
+  static Future<void> upload({
+    required List<GSUploadParams> unuploadedRows,
+  }) async {
+    return await StorageFunctions.upload(unuploadedRows);
+  }
 }
