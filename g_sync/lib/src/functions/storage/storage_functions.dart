@@ -76,13 +76,20 @@ class StorageFunctions {
 
         Logger.plain("Fetching data from ${table.tableName}");
 
-        final response = await GSNetwork.request(
-          table.urlToHeat,
-          table.methode.methode,
-          headers: params.headerData,
-          query: params.queryParamsData,
-          body: params.bodyData,
-        );
+        late Map<String, dynamic> response;
+
+        try {
+          response = await GSNetwork.request(
+            table.urlToHeat,
+            table.methode.methode,
+            headers: params.headerData,
+            query: params.queryParamsData,
+            body: params.bodyData,
+          );
+        } catch (e) {
+          Logger.error("Network Error: $e");
+          continue;
+        }
 
         final networkResponse = GSNetworkResponse.fromJson(response);
 
