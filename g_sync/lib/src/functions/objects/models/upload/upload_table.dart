@@ -44,7 +44,11 @@ class GSUploadTable extends GSBaseTable<GSUploadData> {
   );
 
   @override
-  GSUploadData createRowData(int index, Map<String, dynamic> data, [Map<String, String>? files]) {
+  GSUploadData createRowData(
+    int index,
+    Map<String, dynamic> data, [
+    Map<String, String>? files,
+  ]) {
     return GSUploadData(index: index, data: data, files: files);
   }
 
@@ -53,6 +57,8 @@ class GSUploadTable extends GSBaseTable<GSUploadData> {
     final table = Tables.uploadTable;
     await table.put(tableKey, this);
   }
+
+  int get notUploadedRows => rows.where((row) => !row.uploaded).length;
 }
 
 @HiveType(typeId: CategoryType.uploadData)
