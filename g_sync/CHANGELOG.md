@@ -1,3 +1,7 @@
+## 0.0.1+1
+
+* Expose extensions as api
+
 ## 0.0.1
 
 * Initial release of `g_sync`.
