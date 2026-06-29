@@ -163,8 +163,6 @@ class GSNetwork {
       return GSNetworkResponse.fromRawJson(
         stream,
       ).copyWith(success: true, statusCode: statusCode);
-    } else if (statusCode >= 500 || stream.containsHtml) {
-      throw ServerError();
     } else {
       return GSNetworkResponse.fromRawJson(
         stream,
