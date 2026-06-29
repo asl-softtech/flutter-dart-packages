@@ -1,3 +1,7 @@
+## 0.0.2
+
+* Better Network error response handling
+
 ## 0.0.1+1
 
 * Expose extensions as api
