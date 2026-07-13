@@ -1,3 +1,7 @@
+## 0.0.3
+
+* improve error message parsing and network logging
+
 ## 0.0.2
 
 * Better Network error response handling
