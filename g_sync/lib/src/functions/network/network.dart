@@ -51,20 +51,20 @@ class GSNetwork {
     if (showFullLog && query != null && query.isNotEmpty) {
       log +=
           """
-      QUERY PARAMS: ${query.toBeautifiedString}
+      \nQUERY PARAMS: ${query.toBeautifiedString}
       """;
     }
 
     if (showFullLog && body != null && body.isNotEmpty) {
       log +=
           """
-      REQUEST DATA: ${body.toBeautifiedString}
+      \nREQUEST DATA: ${body.toBeautifiedString}
       """;
     }
     if (showFullLog && response.isNotEmpty) {
       log +=
           """
-      RESPONSE DATA: ${response.toBeautifiedString}
+      \nRESPONSE DATA: ${response.toBeautifiedString}
       """;
     }
 
