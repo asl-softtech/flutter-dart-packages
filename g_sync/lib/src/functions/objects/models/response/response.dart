@@ -26,17 +26,38 @@ class GSNetworkResponse {
       GSNetworkResponse(
         success: _isSuccessful(json['success'] ?? json['status']),
         statusCode: json['status_code'] ?? json['code'] ?? 0,
-        errorMessage: _generateErrorMessage(
-          json['message'] ??
-              json['error'] ??
-              json['errors'] ??
-              json['error_message'],
-        ),
+        errorMessage: _generateErrorMessage(json),
         data: json['data'],
         pagination: json['pagination'] != null
             ? GSPagination.fromJson(json['pagination'])
             : null,
       );
+
+  static String? _generateErrorMessage(Map<String, dynamic> json) {
+    const keys = ['message', 'error', 'errors', 'error_message'];
+
+    final parts = <String>[];
+    for (final key in keys) {
+      final part = _stringify(json[key]);
+      if (part != null && part.isNotEmpty) {
+        parts.add(part);
+      }
+    }
+
+    return parts.isEmpty ? null : parts.join(', ');
+  }
+
+  static String? _stringify(dynamic value) {
+    if (value is String) {
+      return value;
+    } else if (value is List) {
+      return value.map(_stringify).whereType<String>().join(', ');
+    } else if (value is Map) {
+      return value.values.map(_stringify).whereType<String>().join(', ');
+    } else {
+      return null;
+    }
+  }
 
   static bool _isSuccessful(dynamic json) {
     if (json is String) {
@@ -47,18 +68,6 @@ class GSNetworkResponse {
       return json;
     } else {
       return false;
-    }
-  }
-
-  static String? _generateErrorMessage(dynamic json) {
-    if (json is String) {
-      return json;
-    } else if (json is List) {
-      return json.join(', ');
-    } else if (json is Map) {
-      return json.values.join(', ');
-    } else {
-      return null;
     }
   }
 
